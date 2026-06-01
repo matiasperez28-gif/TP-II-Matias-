@@ -2,43 +2,46 @@ import os
 import pandas as pd
 import matplotlib.pyplot as plt
 
-# 1. Crear carpetas
+# 1. Asegurar la estructura local exigida por la UTN
 os.makedirs("datos", exist_ok=True)
 os.makedirs("resultados", exist_ok=True)
 
-# 2. Datos de prueba listos (con números incluidos)
-datos_simulados = {
-    "fecha": ["2025-01-15", "2025-01-20", "2025-02-10", "2025-02-18", "2025-03-05", "2025-03-22"],
-    "producto": ["Teclado", "Mouse", "Teclado", "Monitor", "Mouse", "Monitor"],
-    "cantidad": [2, 5, 1, 1, 3, 2],
-    "precio": [100, 20, 100, 250, 20, 250]
-}
+# 2. Carga y validación del archivo obligatorio
+ruta_dataset = "datos/dataset.csv"
+if not os.path.exists(ruta_dataset):
+    raise FileNotFoundError(f"❌ Error: No se encontró el archivo en '{ruta_dataset}'.")
 
-# 3. Crear el archivo ventas.csv
-df = pd.DataFrame(datos_simulados)
-df.to_csv("datos/ventas.csv", index=False)
-print("✅ Archivo 'datos/ventas.csv' creado con éxito.\n")
+df_ventas = pd.read_csv(ruta_dataset)
+print("✅ Archivo 'datos/dataset.csv' cargado con éxito.\n")
 
-# 4. Calcular Indicadores
-df_ventas = pd.read_csv("datos/ventas.csv")
-df_ventas["total"] = df_ventas["cantidad"] * df_ventas["precio"]
+# 3. Cálculo de Indicadores (Escenario B)
+# Ventas totales usando la columna nativa del archivo
+ventas_totales = df_ventas["monto_total"].sum()
 
-ventas_totales = df_ventas["total"].sum()
-producto_estrella = df_ventas.groupby("producto")["cantidad"].sum().idxmax()
-df_ventas["mes"] = df_ventas["fecha"].str[0:7]
-ventas_mensuales = df_ventas.groupby("mes")["total"].sum()
+# Producto más vendido según la cantidad total de unidades
+producto_estrella = df_ventas.groupby("producto")["cantidad_vendida"].sum().idxmax()
 
-# 5. Mostrar Resultados
-print("📊 --- RESULTADOS ---")
-print(f"Ventas Totales: ${ventas_totales}")
-print(f"Producto más vendido: {producto_estrella}")
-print("Ventas por Mes:\n", ventas_mensuales)
-print("----------------------\n")
+# Extraer el año-mes (YYYY-MM) para agrupar temporalmente
+df_ventas["mes"] = df_ventas["fecha_venta"].str[0:7]
+ventas_mensuales = df_ventas.groupby("mes")["monto_total"].sum()
 
-# 6. Crear y guardar gráfico
-plt.figure(figsize=(6, 4))
-plt.plot(ventas_mensuales.index, ventas_mensuales.values, marker="o", color="blue")
-plt.title("Evolución de Ventas Mensuales")
-plt.grid(True)
-plt.savefig("resultados/grafico_ventas.png")
-print("📈 Gráfico guardado en 'resultados/grafico_ventas.png'")
+# 4. Mostrar Resultados por Consola
+print("📊 --- REPORTE DE INDICADORES (Escenario B) ---")
+print(f"• Ventas Totales: ${ventas_totales:,.2f}")
+print(f"• Producto más vendido: {producto_estrella}")
+print("• Ventas agrupadas por Mes:")
+print(ventas_mensuales.to_string())
+print("------------------------------------------------\n")
+
+# 5. Generar y guardar gráfico estadístico
+plt.figure(figsize=(7, 4))
+plt.bar(ventas_mensuales.index, ventas_mensuales.values, color="darkblue", alpha=0.75)
+plt.title("Evolución de Ventas Mensuales", fontsize=12, fontweight="bold")
+plt.xlabel("Período (Mes)", fontsize=10)
+plt.ylabel("Monto Total ($)", fontsize=10)
+plt.grid(axis="y", linestyle="--", alpha=0.7)
+
+# Guardar con el nombre exacto requerido en la estructura del TP
+ruta_grafico = "resultados/gráfico_resultados.png"
+plt.savefig(ruta_grafico, dpi=300, bbox_inches="tight")
+print(f"📈 Gráfico exportado con éxito en '{ruta_grafico}'")
