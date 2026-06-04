@@ -6,13 +6,26 @@ import matplotlib.pyplot as plt
 os.makedirs("datos", exist_ok=True)
 os.makedirs("resultados", exist_ok=True)
 
-# 2. Carga y validación del archivo obligatorio
-ruta_dataset = "datos/dataset.csv"
-if not os.path.exists(ruta_dataset):
-    raise FileNotFoundError(f"❌ Error: No se encontró el archivo en '{ruta_dataset}'.")
+# 2. CONFIGURACIÓN DE GITHUB - CAMBIA ESTOS DATOS
+# Pon aquí tu usuario de GitHub y el nombre exacto de tu repositorio (debe ser público)
+USUARIO_GITHUB = "TU_USUARIO_GITHUB"
+REPOSITORIO_GITHUB = "TU_NOMBRE_REPOSITORIO"
+RAMA_GITHUB = "main" # Cambiar a "master" si tu repositorio usa esa rama por defecto
 
-df_ventas = pd.read_csv(ruta_dataset)
-print("✅ Archivo 'datos/dataset.csv' cargado con éxito.\n")
+# Construcción de la URL Raw para que Pandas lea el CSV directo de internet
+ruta_dataset = f"https://githubusercontent.com{USUARIO_GITHUB}/{REPOSITORIO_GITHUB}/{RAMA_GITHUB}/datos/dataset.csv"
+
+# Carga y validación del archivo obligatorio desde GitHub
+try:
+    df_ventas = pd.read_csv(ruta_dataset)
+    print("✅ Archivo 'dataset.csv' cargado con éxito desde GitHub.\n")
+except Exception as e:
+    raise FileNotFoundError(
+        f"❌ Error: No se pudo leer el archivo en GitHub.\n"
+        f"Ruta intentada: {ruta_dataset}\n"
+        f"Detalle del error: {e}\n"
+        f"💡 Verifique que el repositorio sea PÚBLICO y que los nombres de usuario/repositorio sean correctos."
+    )
 
 # 3. Cálculo de Indicadores (Escenario B)
 # Ventas totales usando la columna nativa del archivo
